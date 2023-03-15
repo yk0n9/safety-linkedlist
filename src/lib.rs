@@ -277,6 +277,16 @@ impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
     }
 }
 
+impl<T: Debug + Clone> From<Vec<T>> for LinkedList<T> {
+    fn from(value: Vec<T>) -> Self {
+        let mut list = LinkedList::<T>::new();
+        for i in value {
+            list.append(i);
+        }
+        list
+    }
+}
+
 #[test]
 fn test() {
     let mut list = LinkedList::<i32>::new();
@@ -290,5 +300,10 @@ fn test() {
     list.reverse();
     println!("{}", list);
 
-    println!("{}", list.length());
+    println!("len: {}", list.length());
+
+    let mut list = LinkedList::from(vec![1, 2, 3, 4, 5, 6, 7, 8]);
+    list.prepend(9).reverse();
+
+    println!("{}", list);
 }
