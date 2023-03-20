@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::fmt::Debug;
+use std::ops::Index;
 use std::rc::Rc;
 
 type Data<T> = Rc<RefCell<Node<T>>>;
@@ -21,6 +22,7 @@ pub struct LinkedList<T> {
     list: Option<Data<T>>,
     length: usize,
     last_node: Option<Data<T>>,
+    index: usize,
 }
 
 impl<T: Clone + Debug + ?Sized> LinkedList<T> {
@@ -29,6 +31,7 @@ impl<T: Clone + Debug + ?Sized> LinkedList<T> {
             list: None,
             length: 0,
             last_node: None,
+            index: 0,
         }
     }
 
@@ -252,6 +255,13 @@ impl<T: Clone + Debug + ?Sized> LinkedList<T> {
         self.length += 1;
         self
     }
+
+    pub fn is_empty(&self) -> bool {
+        if self.length > 0 {
+            return false;
+        }
+        true
+    }
 }
 
 impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
@@ -287,6 +297,48 @@ impl<T: Debug + Clone> From<Vec<T>> for LinkedList<T> {
     }
 }
 
+impl<T: Debug + Clone> Into<Vec<T>> for LinkedList<T> {
+    fn into(self) -> Vec<T> {
+        let mut list: Vec<T> = vec![];
+        let len = self.length;
+        if len > 0 {
+            let mut next = self.list.clone();
+            while let Some(n) = next {
+                list.push(n.borrow().data.clone());
+                next = n.borrow().next.clone();
+            }
+            return list;
+        }
+        list
+    }
+}
+
+impl<T: Debug + Clone> Iterator for LinkedList<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut next = match self.list.as_ref() {
+            None => return None,
+            Some(n) => n.clone(),
+        };
+        for _ in 0..self.index {
+            let tmp = match next.borrow().next.as_ref() {
+                None => return None,
+                Some(n) => n.clone(),
+            };
+            next = tmp;
+        }
+
+        let res = Some(next.borrow().data.clone());
+        if self.index < self.length {
+            self.index += 1;
+        } else {
+            self.index = 0;
+        }
+        res
+    }
+}
+
 #[test]
 fn test() {
     let mut list = LinkedList::<i32>::new();
@@ -306,4 +358,16 @@ fn test() {
     list.prepend(9).reverse();
 
     println!("{}", list);
+
+    let list: Vec<i32> = list.into();
+
+    println!("{:?}", list);
+
+    for i in list.iter() {
+        println!("iter: {:?}", i);
+    }
+
+    for j in list.iter() {
+        println!("iter2: {:?}", j);
+    }
 }
