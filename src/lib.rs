@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::fmt::Debug;
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 use std::rc::Rc;
 
 type Data<T> = Rc<RefCell<Node<T>>>;
@@ -23,15 +23,17 @@ pub struct LinkedList<T> {
     length: usize,
     last_node: Option<Data<T>>,
     index: usize,
+    value: T,
 }
 
-impl<T: Clone + Debug + ?Sized> LinkedList<T> {
+impl<T: Clone + Debug + ?Sized + Default> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             list: None,
             length: 0,
             last_node: None,
             index: 0,
+            value: Default::default(),
         }
     }
 
@@ -287,7 +289,7 @@ impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
     }
 }
 
-impl<T: Debug + Clone> From<Vec<T>> for LinkedList<T> {
+impl<T: Debug + Clone + Default> From<Vec<T>> for LinkedList<T> {
     fn from(value: Vec<T>) -> Self {
         let mut list = LinkedList::<T>::new();
         for i in value {
@@ -339,35 +341,70 @@ impl<T: Debug + Clone> Iterator for LinkedList<T> {
     }
 }
 
-#[test]
-fn test() {
-    let mut list = LinkedList::<i32>::new();
 
-    list.append(1).append(2).append(3).prepend(40);
-    println!("{}", list);
+impl<T: Clone> Index<usize> for LinkedList<T> {
+    type Output = T;
 
-    list.set(1, 10).insert(2, 70).rm(4).rm_front();
-    println!("{}", list);
-
-    list.reverse();
-    println!("{}", list);
-
-    println!("len: {}", list.length());
-
-    let mut list = LinkedList::from(vec![1, 2, 3, 4, 5, 6, 7, 8]);
-    list.prepend(9).reverse();
-
-    println!("{}", list);
-
-    let list: Vec<i32> = list.into();
-
-    println!("{:?}", list);
-
-    for i in list.iter() {
-        println!("iter: {:?}", i);
+    fn index(&self, _index: usize) -> &Self::Output {
+        unimplemented!()
     }
+}
 
-    for j in list.iter() {
-        println!("iter2: {:?}", j);
+impl<T: Clone> IndexMut<usize> for LinkedList<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        let mut next = match self.list.as_ref() {
+            None => return &mut self.value,
+            Some(n) => n.clone(),
+        };
+        for _ in 0..index {
+            let tmp = match next.borrow().next.as_ref() {
+                None => return &mut self.value,
+                Some(n) => n.clone(),
+            };
+            next = tmp;
+        }
+
+        self.value = next.borrow().data.clone();
+
+        &mut self.value
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::LinkedList;
+
+    #[test]
+    fn test() {
+        let mut list = LinkedList::<i32>::new();
+
+        list.append(1).append(2).append(3).prepend(40);
+        println!("{}", list);
+
+        list.set(1, 10).insert(2, 70).rm(4).rm_front();
+        println!("{}", list);
+
+        list.reverse();
+        println!("{}", list);
+
+        println!("len: {}", list.length());
+
+        let mut list = LinkedList::from(vec![1, 2, 3, 4, 5, 6, 7, 8]);
+        list.prepend(9).reverse();
+
+        println!("{}", list);
+
+        let list: Vec<i32> = list.into();
+
+        println!("{:?}", list);
+
+        for i in list.iter() {
+            println!("iter: {:?}", i);
+        }
+
+        for j in list.iter() {
+            println!("iter2: {:?}", j);
+        }
+        println!("{:?}", list[0]);
     }
 }
