@@ -97,17 +97,10 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let mut next = match self.list.as_ref() {
+        let next = match self.list.as_ref() {
             None => return self,
-            Some(n) => n.clone(),
+            Some(n) => range(n.clone(), self.length - 2),
         };
-        for _ in 0..self.length - 2 {
-            let tmp = match next.borrow().next.as_ref() {
-                None => return self,
-                Some(n) => n.clone(),
-            };
-            next = tmp;
-        }
         next.borrow_mut().next = None;
         self.last_node = Some(next.clone());
 
@@ -157,17 +150,10 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let mut next = match self.list.as_ref() {
+        let next = match self.list.as_ref() {
             None => return self,
-            Some(n) => n.clone(),
+            Some(n) => range(n.clone(), index - 1),
         };
-        for _ in 0..index - 1 {
-            let tmp = match next.borrow().next.as_ref() {
-                None => return self,
-                Some(n) => n.clone(),
-            };
-            next = tmp;
-        }
         let tmp = match next.borrow().next.as_ref() {
             None => return self,
             Some(n) => n.clone(),
@@ -183,17 +169,10 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let mut next = match self.list.as_ref() {
+        let next = match self.list.as_ref() {
             None => return self,
-            Some(n) => n.clone(),
+            Some(n) => range(n.clone(), index),
         };
-        for _ in 0..index {
-            let tmp = match next.borrow().next.as_ref() {
-                None => return self,
-                Some(n) => n.clone(),
-            };
-            next = tmp;
-        }
         next.borrow_mut().data = data;
 
         self
@@ -204,17 +183,10 @@ impl<T: Clone + Debug> LinkedList<T> {
             return None;
         }
 
-        let mut next = match self.list.as_ref() {
+        let next = match self.list.as_ref() {
             None => return None,
-            Some(n) => n.clone(),
+            Some(n) => range(n.clone(), index),
         };
-        for _ in 0..index {
-            let tmp = match next.borrow().next.as_ref() {
-                None => return None,
-                Some(n) => n.clone(),
-            };
-            next = tmp;
-        }
 
         let res = Some(next.borrow().data.clone());
         res
@@ -232,18 +204,11 @@ impl<T: Clone + Debug> LinkedList<T> {
 
         let new_node = Node::new(data);
 
-        let mut next = match self.list.as_ref() {
+        let next = match self.list.as_ref() {
             None => return self,
-            Some(n) => n.clone(),
+            Some(n) => range(n.clone(), index - 1),
         };
 
-        for _ in 0..index - 1 {
-            let tmp = match next.borrow().next.as_ref() {
-                None => return self,
-                Some(n) => n.clone(),
-            };
-            next = tmp;
-        }
         let tmp = match next.borrow().next.as_ref() {
             None => return self,
             Some(n) => n.clone(),
@@ -263,6 +228,18 @@ impl<T: Clone + Debug> LinkedList<T> {
     }
 }
 
+fn range<T>(item: Data<T>, index: usize) -> Data<T> {
+    let mut next = item.clone();
+    for _ in 0..index {
+        let tmp = match next.borrow().next.as_ref() {
+            None => return item,
+            Some(n) => n.clone(),
+        };
+        next = tmp;
+    }
+    next
+}
+
 impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.list.is_none() {
@@ -272,10 +249,10 @@ impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
             while let Some(node) = next {
                 write!(
                     f,
-                    "{} {} ",
+                    "{} {}",
                     node.borrow().data,
                     match node.borrow().next.is_some() {
-                        true => "->",
+                        true => "-> ",
                         false => "",
                     }
                 )?;
