@@ -293,17 +293,10 @@ impl<T: Debug + Clone> Iterator for LinkedList<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut next = match self.list.as_ref() {
+        let next = match self.list.as_ref() {
             None => return None,
-            Some(n) => n.clone(),
+            Some(n) => range(n.clone(), self.index),
         };
-        for _ in 0..self.index {
-            let tmp = match next.borrow().next.as_ref() {
-                None => return None,
-                Some(n) => n.clone(),
-            };
-            next = tmp;
-        }
 
         let res = Some(next.borrow().data.clone());
         if self.index < self.length {
