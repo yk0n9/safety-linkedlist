@@ -18,19 +18,17 @@ impl<T> Node<T> {
 
 #[derive(Debug)]
 pub struct LinkedList<T> {
-    list: Option<Data<T>>,
+    head: Option<Data<T>>,
+    last: Option<Data<T>>,
     length: usize,
-    last_node: Option<Data<T>>,
-    index: usize,
 }
 
 impl<T: Clone + Debug> LinkedList<T> {
     pub fn new() -> Self {
         Self {
-            list: None,
+            head: None,
             length: 0,
-            last_node: None,
-            index: 0,
+            last: None,
         }
     }
 
@@ -39,9 +37,9 @@ impl<T: Clone + Debug> LinkedList<T> {
     }
 
     pub fn clear(&mut self) -> &mut Self {
-        self.list = None;
+        self.head = None;
         self.length = 0;
-        self.last_node = None;
+        self.last = None;
 
         self
     }
@@ -51,7 +49,7 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let mut now = self.list.take();
+        let mut now = self.head.take();
         while let Some(n) = now.as_mut() {
             let next = n.borrow_mut().next.take();
             self.prepend(n.borrow().data.clone());
@@ -63,32 +61,32 @@ impl<T: Clone + Debug> LinkedList<T> {
     }
 
     pub fn front(&self) -> Option<T> {
-        match self.list.as_ref() {
+        match self.head.as_ref() {
             None => None,
             Some(n) => Some(n.borrow().data.clone()),
         }
     }
 
     pub fn last(&self) -> Option<T> {
-        match self.last_node.as_ref() {
+        match self.last.as_ref() {
             None => None,
             Some(n) => Some(n.borrow().data.clone()),
         }
     }
 
     pub fn rm_front(&mut self) -> &mut Self {
-        let tmp = match self.list.as_ref() {
+        let tmp = match self.head.as_ref() {
             None => return self,
             Some(n) => n.borrow_mut().next.take(),
         };
-        self.list = tmp;
+        self.head = tmp;
 
         self.length -= 1;
         self
     }
 
     pub fn rm_last(&mut self) -> &mut Self {
-        if self.last_node.is_none() {
+        if self.last.is_none() {
             return self;
         }
 
@@ -97,12 +95,12 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let next = match self.list.as_ref() {
+        let next = match self.head.as_ref() {
             None => return self,
             Some(n) => range(n.clone(), self.length - 2),
         };
         next.borrow_mut().next = None;
-        self.last_node = Some(next.clone());
+        self.last = Some(next.clone());
 
         self.length -= 1;
         self
@@ -110,26 +108,26 @@ impl<T: Clone + Debug> LinkedList<T> {
 
     pub fn append(&mut self, data: T) -> &mut Self {
         let new_node = Node::new(data);
-        match self.last_node.take() {
+        match self.last.take() {
             Some(node) => node.borrow_mut().next = Some(new_node.clone()),
-            None => self.list = Some(new_node.clone()),
+            None => self.head = Some(new_node.clone()),
         }
         self.length += 1;
-        self.last_node = Some(new_node);
+        self.last = Some(new_node);
 
         self
     }
 
     pub fn prepend(&mut self, data: T) -> &mut Self {
         let new_node = Node::new(data);
-        match self.list.take() {
+        match self.head.take() {
             Some(node) => {
                 new_node.borrow_mut().next = Some(node);
-                self.list = Some(new_node);
+                self.head = Some(new_node);
             }
             None => {
-                self.list = Some(new_node.clone());
-                self.last_node = Some(new_node)
+                self.head = Some(new_node.clone());
+                self.last = Some(new_node)
             }
         }
         self.length += 1;
@@ -150,7 +148,7 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let next = match self.list.as_ref() {
+        let next = match self.head.as_ref() {
             None => return self,
             Some(n) => range(n.clone(), index - 1),
         };
@@ -169,7 +167,7 @@ impl<T: Clone + Debug> LinkedList<T> {
             return self;
         }
 
-        let next = match self.list.as_ref() {
+        let next = match self.head.as_ref() {
             None => return self,
             Some(n) => range(n.clone(), index),
         };
@@ -183,7 +181,7 @@ impl<T: Clone + Debug> LinkedList<T> {
             return None;
         }
 
-        let next = match self.list.as_ref() {
+        let next = match self.head.as_ref() {
             None => return None,
             Some(n) => range(n.clone(), index),
         };
@@ -204,7 +202,7 @@ impl<T: Clone + Debug> LinkedList<T> {
 
         let new_node = Node::new(data);
 
-        let next = match self.list.as_ref() {
+        let next = match self.head.as_ref() {
             None => return self,
             Some(n) => range(n.clone(), index - 1),
         };
@@ -226,6 +224,14 @@ impl<T: Clone + Debug> LinkedList<T> {
         }
         true
     }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            head: self.head.clone(),
+            length: self.length,
+            index: 0,
+        }
+    }
 }
 
 fn range<T>(item: Data<T>, index: usize) -> Data<T> {
@@ -242,10 +248,10 @@ fn range<T>(item: Data<T>, index: usize) -> Data<T> {
 
 impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.list.is_none() {
+        if self.head.is_none() {
             write!(f, "None")?;
         } else {
-            let mut next = self.list.clone();
+            let mut next = self.head.clone();
             while let Some(node) = next {
                 write!(
                     f,
@@ -265,11 +271,11 @@ impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
 
 impl<T: Debug + Clone> From<Vec<T>> for LinkedList<T> {
     fn from(value: Vec<T>) -> Self {
-        let mut list = LinkedList::<T>::new();
+        let mut head = LinkedList::<T>::new();
         for i in value {
-            list.append(i);
+            head.append(i);
         }
-        list
+        head
     }
 }
 
@@ -278,7 +284,7 @@ impl<T: Debug + Clone> Into<Vec<T>> for LinkedList<T> {
         let mut list: Vec<T> = vec![];
         let len = self.length;
         if len > 0 {
-            let mut next = self.list.clone();
+            let mut next = self.head.clone();
             while let Some(n) = next {
                 list.push(n.borrow().data.clone());
                 next = n.borrow().next.clone();
@@ -289,22 +295,27 @@ impl<T: Debug + Clone> Into<Vec<T>> for LinkedList<T> {
     }
 }
 
-impl<T: Debug + Clone> Iterator for LinkedList<T> {
+pub struct Iter<T> {
+    head: Option<Data<T>>,
+    length: usize,
+    index: usize,
+}
+
+impl<T: Debug + Clone> Iterator for Iter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let next = match self.list.as_ref() {
-            None => return None,
-            Some(n) => range(n.clone(), self.index),
-        };
-
-        let res = Some(next.borrow().data.clone());
-        if self.index < self.length {
-            self.index += 1;
+        if self.index == self.length {
+            None
         } else {
-            self.index = 0;
+            let next = match self.head.as_ref() {
+                None => return None,
+                Some(n) => range(n.clone(), self.index)
+            };
+            self.index += 1;
+            let res = Some(next.borrow().data.clone());
+            res
         }
-        res
     }
 }
 
@@ -315,6 +326,7 @@ mod tests {
     #[test]
     fn test() {
         let mut link = LinkedList::from(vec![1, 2, 3]);
+
         link.append(1)
             .append(2)
             .append(3)
@@ -323,11 +335,12 @@ mod tests {
             .reverse()
             .rm_front()
             .rm_last();
-
         assert_eq!(Some(3), link.get(3));
 
-        let list: Vec<i32> = link.into();
+        let mut iter = link.iter();
+        assert_eq!(iter.next(), Some(3));
 
+        let list: Vec<i32> = link.into();
         assert_eq!(vec![3, 2, 1, 3, 2, 1], list);
     }
 }
