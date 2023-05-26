@@ -225,9 +225,9 @@ impl<T: Clone + Debug> LinkedList<T> {
         true
     }
 
-    pub fn iter(&self) -> Iter<T> {
+    pub fn iter(&self) -> Iter<'_, T> {
         Iter {
-            head: self.head.clone(),
+            head: &self.head,
             length: self.length,
             index: 0,
         }
@@ -295,13 +295,13 @@ impl<T: Debug + Clone> Into<Vec<T>> for LinkedList<T> {
     }
 }
 
-pub struct Iter<T> {
-    head: Option<Data<T>>,
+pub struct Iter<'a, T> {
+    head: &'a Option<Data<T>>,
     length: usize,
     index: usize,
 }
 
-impl<T: Debug + Clone> Iterator for Iter<T> {
+impl<T: Debug + Clone> Iterator for Iter<'_, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
