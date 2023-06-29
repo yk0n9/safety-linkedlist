@@ -118,35 +118,34 @@ impl<T> LinkedList<T> {
         Some(ptr.as_deref_mut().unwrap().as_mut())
     }
 
-    pub fn pop_front(&mut self) -> &mut Self {
+    pub fn pop_front(&mut self) -> Option<T> {
         if self.head.is_none() {
-            return self;
+            return None;
         }
-        let ptr = self.head.take();
-        self.head = ptr.unwrap().next;
+        let ptr = self.head.take().unwrap();
+        self.head = ptr.next;
         self.len -= 1;
-        self
+        Some(ptr.data)
     }
 
-    pub fn pop_last(&mut self) -> &mut Self {
+    pub fn pop_last(&mut self) -> Option<T> {
         if self.head.is_none() {
-            return self;
+            return None;
         }
         if self.len == 1 {
-            self.pop_front();
-            return self;
+            return self.pop_front();
         }
         let mut ptr = &mut self.head;
-        for _ in 0..self.len - 2 {
+        for _ in 0..self.len - 1 {
             if let Some(node) = ptr {
                 ptr = &mut node.next;
             } else {
                 break;
             }
         }
-        ptr.as_deref_mut().unwrap().next = None;
+        let ptr = ptr.take().unwrap();
         self.len -= 1;
-        self
+        Some(ptr.data)
     }
 
     pub fn insert(&mut self, data: T, index: usize) -> &mut Self {
@@ -200,7 +199,7 @@ impl<T> LinkedList<T> {
 
     pub fn into_iter(self) -> IntoIter<T> {
         IntoIter {
-            ptr: self.head
+            ptr: self
         }
     }
 }
@@ -214,7 +213,7 @@ pub struct IterMut<'a, T> {
 }
 
 pub struct IntoIter<T> {
-    ptr: Option<Box<Node<T>>>,
+    ptr: LinkedList<T>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -245,8 +244,8 @@ impl<T> Iterator for IntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(node) = self.ptr.take() {
-            self.ptr = node.next;
+        if let Some(node) = self.ptr.head.take() {
+            self.ptr.head = node.next;
             return Some(node.data);
         }
         None
@@ -326,6 +325,12 @@ impl<T> Into<Vec<T>> for LinkedList<T> {
     }
 }
 
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        while self.pop_front().is_some() {}
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::LinkedList;
@@ -339,10 +344,11 @@ mod tests {
             .append(3)
             .append(4)
             .prepend(0)
-            .reverse()
-            .pop_front()
-            .pop_last();
-        assert_eq!(3, list[3]);
+            .reverse();
+        println!("{}", list);
+
+        assert_eq!(list.pop_last(), Some(0));
+        assert_eq!(list.pop_front(), Some(4));
 
         let mut iter = list.iter_mut();
         assert_eq!(iter.next(), Some(&mut 3));
