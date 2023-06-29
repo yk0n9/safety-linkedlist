@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 use std::ops::{Index, IndexMut};
 
 #[derive(Debug, Clone)]
-struct LinkedList<T> {
+pub struct LinkedList<T> {
     head: Option<Box<Node<T>>>,
     len: usize,
 }
@@ -15,17 +15,17 @@ struct Node<T> {
 
 impl<T> Node<T> {
     #[inline]
-    pub fn new(data: T) -> Box<Self> {
+    fn new(data: T) -> Box<Self> {
         Box::new(Self { data, next: None })
     }
 
     #[inline]
-    pub fn as_ref(&self) -> &T {
+    fn as_ref(&self) -> &T {
         &self.data
     }
 
     #[inline]
-    pub fn as_mut(&mut self) -> &mut T {
+    fn as_mut(&mut self) -> &mut T {
         &mut self.data
     }
 }
@@ -205,15 +205,15 @@ impl<T> LinkedList<T> {
     }
 }
 
-struct Iter<'a, T> {
+pub struct Iter<'a, T> {
     ptr: Option<&'a Box<Node<T>>>,
 }
 
-struct IterMut<'a, T> {
+pub struct IterMut<'a, T> {
     ptr: Option<&'a mut Box<Node<T>>>,
 }
 
-struct IntoIter<T> {
+pub struct IntoIter<T> {
     ptr: Option<Box<Node<T>>>,
 }
 
@@ -332,9 +332,9 @@ mod tests {
 
     #[test]
     fn test() {
-        let mut link = LinkedList::from(vec![1, 2, 3]);
+        let mut list = LinkedList::from(vec![1, 2, 3]);
 
-        link.append(1)
+        list.append(1)
             .append(2)
             .append(3)
             .append(4)
@@ -342,12 +342,12 @@ mod tests {
             .reverse()
             .pop_front()
             .pop_last();
-        assert_eq!(3, link[3]);
+        assert_eq!(3, list[3]);
 
-        let mut iter = link.iter_mut();
+        let mut iter = list.iter_mut();
         assert_eq!(iter.next(), Some(&mut 3));
 
-        let list: Vec<i32> = link.into();
+        let list: Vec<i32> = list.into();
         assert_eq!(vec![3, 2, 1, 3, 2, 1], list);
     }
 }
