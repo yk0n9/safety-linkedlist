@@ -108,7 +108,7 @@ impl<T> LinkedList<T> {
         if ptr.is_none() {
             return None;
         }
-        loop {
+        for _ in 0..self.len - 1 {
             if let Some(node) = ptr {
                 ptr = &mut node.next;
             } else {
