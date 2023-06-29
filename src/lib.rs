@@ -42,7 +42,7 @@ impl<T> LinkedList<T> {
         while let Some(node) = ptr {
             ptr = &mut node.next;
         }
-        let _ = ptr.insert(new_node);
+        *ptr = Some(new_node);
         self.len += 1;
         self
     }
