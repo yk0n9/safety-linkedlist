@@ -28,6 +28,11 @@ impl<T> Node<T> {
     fn as_mut(&mut self) -> &mut T {
         &mut self.data
     }
+
+    #[inline]
+    fn swap(&mut self, other: &mut Node<T>) {
+        std::mem::swap(&mut self.data, &mut other.data);
+    }
 }
 
 impl<T> LinkedList<T> {
@@ -169,6 +174,29 @@ impl<T> LinkedList<T> {
         new_node.next = ptr.as_deref_mut().unwrap().next.take();
         ptr.as_deref_mut().unwrap().next = Some(new_node);
         self.len += 1;
+        self
+    }
+
+    pub fn remove(&mut self, mut index: usize) -> &mut Self {
+        if self.head.is_none() {
+            return self;
+        }
+        if index == 0 {
+            self.pop_front();
+            return self;
+        }
+        if index >= self.len {
+            index = self.len - 1;
+        }
+        let mut ptr = &mut self.head;
+        for _ in 0..index - 1 {
+            if let Some(node) = ptr {
+                ptr = &mut node.next;
+            } else {
+                break;
+            }
+        }
+        ptr.as_deref_mut().unwrap().next = ptr.as_deref_mut().unwrap().next.as_deref_mut().unwrap().next.take();
         self
     }
 
@@ -352,8 +380,9 @@ mod tests {
 
         let mut iter = list.iter_mut();
         assert_eq!(iter.next(), Some(&mut 3));
+        list.remove(2);
 
         let list: Vec<i32> = list.into();
-        assert_eq!(vec![3, 2, 1, 3, 2, 1], list);
+        assert_eq!(vec![3, 2, 3, 2, 1], list);
     }
 }
