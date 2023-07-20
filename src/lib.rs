@@ -1,5 +1,12 @@
-use std::fmt::Formatter;
-use std::ops::{Index, IndexMut};
+#![no_std]
+
+extern crate alloc;
+
+use alloc::boxed::Box;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::fmt::Formatter;
+use core::ops::{Index, IndexMut};
 
 #[derive(Debug, Clone)]
 pub struct LinkedList<T> {
@@ -31,7 +38,7 @@ impl<T> Node<T> {
 
     #[inline]
     fn swap(&mut self, other: &mut Node<T>) {
-        std::mem::swap(&mut self.data, &mut other.data);
+        core::mem::swap(&mut self.data, &mut other.data);
     }
 }
 
@@ -310,8 +317,8 @@ impl<T> IndexMut<usize> for LinkedList<T> {
     }
 }
 
-impl<T: std::fmt::Display> std::fmt::Display for LinkedList<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl<T: core::fmt::Display> core::fmt::Display for LinkedList<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         if self.head.is_none() {
             write!(f, "None")?;
         } else {
@@ -361,6 +368,8 @@ impl<T> Drop for LinkedList<T> {
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec;
+    use alloc::vec::Vec;
     use super::LinkedList;
 
     #[test]
@@ -373,7 +382,6 @@ mod tests {
             .append(4)
             .prepend(0)
             .reverse();
-        println!("{}", list);
 
         assert_eq!(list.pop_last(), Some(0));
         assert_eq!(list.pop_front(), Some(4));
