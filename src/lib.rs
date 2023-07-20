@@ -5,7 +5,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use alloc::vec;
 use alloc::vec::Vec;
-use core::fmt::Formatter;
+use core::fmt::{Display, Formatter, Result};
 use core::ops::{Index, IndexMut};
 
 #[derive(Debug, Clone)]
@@ -203,7 +203,14 @@ impl<T> LinkedList<T> {
                 break;
             }
         }
-        ptr.as_deref_mut().unwrap().next = ptr.as_deref_mut().unwrap().next.as_deref_mut().unwrap().next.take();
+        ptr.as_deref_mut().unwrap().next = ptr
+            .as_deref_mut()
+            .unwrap()
+            .next
+            .as_deref_mut()
+            .unwrap()
+            .next
+            .take();
         self
     }
 
@@ -233,9 +240,7 @@ impl<T> LinkedList<T> {
     }
 
     pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter {
-            ptr: self
-        }
+        IntoIter { ptr: self }
     }
 }
 
@@ -317,8 +322,8 @@ impl<T> IndexMut<usize> for LinkedList<T> {
     }
 }
 
-impl<T: core::fmt::Display> core::fmt::Display for LinkedList<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+impl<T: Display> Display for LinkedList<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if self.head.is_none() {
             write!(f, "None")?;
         } else {
@@ -368,9 +373,9 @@ impl<T> Drop for LinkedList<T> {
 
 #[cfg(test)]
 mod tests {
+    use super::LinkedList;
     use alloc::vec;
     use alloc::vec::Vec;
-    use super::LinkedList;
 
     #[test]
     fn test() {
