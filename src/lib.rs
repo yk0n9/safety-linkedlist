@@ -3,7 +3,6 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
-use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Index, IndexMut};
@@ -85,19 +84,19 @@ impl<T> LinkedList<T> {
     }
 
     pub fn first(&self) -> Option<&T> {
-        return if let Some(ref node) = self.head {
+        if let Some(ref node) = self.head {
             Some(node.as_ref().as_ref())
         } else {
             None
-        };
+        }
     }
 
     pub fn first_mut(&mut self) -> Option<&mut T> {
-        return if let Some(ref mut node) = self.head {
+        if let Some(ref mut node) = self.head {
             Some(node.as_mut().as_mut())
         } else {
             None
-        };
+        }
     }
 
     pub fn last(&self) -> Option<&T> {
@@ -357,7 +356,7 @@ impl<T> From<Vec<T>> for LinkedList<T> {
 
 impl<T> Into<Vec<T>> for LinkedList<T> {
     fn into(self) -> Vec<T> {
-        let mut list = vec![];
+        let mut list = Vec::with_capacity(self.len);
         for data in self.into_iter() {
             list.push(data);
         }
