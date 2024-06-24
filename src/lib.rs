@@ -70,6 +70,7 @@ impl<T> LinkedList<T> {
     }
 
     pub fn clear(&mut self) -> &mut Self {
+        while self.pop_front().is_some() {}
         self.head = None;
         self.len = 0;
         self
